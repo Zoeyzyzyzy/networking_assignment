@@ -97,6 +97,10 @@ int main(int argc, char *argv[])
     double timeout_p = ((10 - recieved_n) / 10.0) * 100;
     rtt_min = rtt_min == DBL_MAX ? 0 : rtt_min;
     double rtt_avg = recieved_n == 0 ? 0 : rtt_sum / recieved_n;
-    printf("--- %s ping statistics ---\n", hostname);
-    printf("%d packets transmitted, %d received, %.0f%% packet loss rtt min/avg/max = %.3f %.3f %.3f ms\n", 10, recieved_n, timeout_p, rtt_min, rtt_avg, rtt_max);
+    printf("--- %s ping statistics ---\n%d packets transmitted, %d received, %.0f%% packet loss", hostname,  10, recieved_n, timeout_p);
+    if(recieved_n == 0) {
+        printf("\n");
+    } else {
+        printf(" rtt min/avg/max = %.3f %.3f %.3f ms\n", rtt_min, rtt_avg, rtt_max);
+    }
 }
