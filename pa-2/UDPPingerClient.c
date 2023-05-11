@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
         if (n < 0)
         {
-            printf("Request timeout for seq#=%ld \n", i);
+            printf("Request timeout for seq#=%ld\n", i);
         }
         else
         {
@@ -96,6 +96,6 @@ int main(int argc, char *argv[])
     close(client_sock);
     double timeout_p = ((10 - recieved_n) / 10.0) * 100;
     double rtt_avg = rtt_sum / recieved_n;
-    printf("--- %s ping statistics --- \n", hostname);
+    printf("--- %s ping statistics ---\n", hostname);
     printf("%d packets transmitted, %d received, %.0f%% packet loss rtt min/avg/max = %.3f %.3f %.3f ms\n", 10, recieved_n, timeout_p, rtt_min, rtt_avg, rtt_max);
 }
