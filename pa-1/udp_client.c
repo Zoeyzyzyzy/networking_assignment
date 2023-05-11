@@ -57,19 +57,6 @@ int main(int argc, char *argv[])
 
     // receive data from the server
     bzero(buffer, 130);
-    // while (1) {
-    //     memset(buffer, 0, sizeof(buffer));
-    //     int response = recvfrom(client_sock, buffer, sizeof(buffer), 0, NULL, NULL);
-    //     if (response < 0) {
-    //         printf("Error: failed to receive message.\n");
-    //         break;
-    //     } 
-    //     printf("From Server: %s\n", buffer);
-    //     if(response == 1) {
-    //         close(client_sock);
-    //     }
-    //      printf("Length of the string: %d\n", response);
-    // }
     memset(buffer, 0, sizeof(buffer));
     int response = recvfrom(client_sock, buffer, sizeof(buffer), 0, NULL, NULL);
     while (response > 0){
