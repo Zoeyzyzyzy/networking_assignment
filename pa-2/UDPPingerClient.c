@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
             rtt_min = fmin(rtt_min, rtt_ms);
             rtt_sum += rtt_ms;
             recieved_n++;
-            printf("PING received from %s: seq#=%ld time=%.3f ms \n", hostname, i, rtt_ms);
+            printf("PING received from %s: seq#=%ld time=%.3f ms\n", hostname, i, rtt_ms);
         }
 
         sleep(1);
@@ -97,5 +97,5 @@ int main(int argc, char *argv[])
     double timeout_p = ((10 - recieved_n) / 10.0) * 100;
     double rtt_avg = rtt_sum / recieved_n;
     printf("--- %s ping statistics --- \n", hostname);
-    printf("%d packets transmitted, %d received, %.1f%% packet loss rtt min / avg / max = %.3f %.3f %.3f ms\n", 10, recieved_n, timeout_p, rtt_min, rtt_avg, rtt_max);
+    printf("%d packets transmitted, %d received, %.0f%% packet loss rtt min/avg/max = %.3f %.3f %.3f ms\n", 10, recieved_n, timeout_p, rtt_min, rtt_avg, rtt_max);
 }
