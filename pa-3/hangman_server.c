@@ -10,7 +10,9 @@
 #include "header.h"
 
 #define MAX_CLIENTS 3
-#define BUFFER_SIZE 54
+#define BUFFER_SIZE 64
+
+int num_clients = 0;
 
 void error(const char *message)
 {
@@ -58,6 +60,11 @@ char *read_word_list()
 //     send(client_socket, &server_header, sizeof(server_header), 0);
 // }
 
+void send_game_control_packet(int client_socket, struct ServerMessageHeader *server_message)
+{
+    send(client_socket, server_message, sizeof(struct ServerMessageHeader), 0);
+}
+
 void *client_thread(void *arg)
 {
     int client_socket = *(int *)arg;
@@ -88,27 +95,23 @@ void *client_thread(void *arg)
     int remain_words = word_length;
 
     // Send the game control packet to the client
-    send(client_socket, &server_message, sizeof(server_message), 0);
+    send_game_control_packet(client_socket, &server_message);
 
     while (1)
     {
         // Receive the client's guess
         int bytes_received = recv(client_socket, &client_message, sizeof(client_message), 0);
         printf("bytes_recevied: %d\n", bytes_received);
-        // if (bytes_received == -1)
-        // {
-        //     error("Error: Could not receive data from client");
-        // }
-        // else
         if (bytes_received == -1 || bytes_received == 0)
         {
             // Client terminated connection (Ctrl+D)
+            num_clients--;
 
             // Close the client socket
             close(client_socket);
 
             // Terminate the thread
-            pthread_exit(client_thread);
+            pthread_exit(NULL);
 
             printf("\n\n");
 
@@ -120,7 +123,7 @@ void *client_thread(void *arg)
         printf("111 %c\n", client_message.data[0]);
         for (int i = 0; i < word_length; i++)
         {
-            if (tolower(chosen_word[i]) == client_message.data[0])
+            if (tolower(chosen_word[i]) == client_message.data[0] && server_message.data[i] == '_')
             {
                 server_message.data[i] = chosen_word[i];
                 remain_words--;
@@ -142,6 +145,15 @@ void *client_thread(void *arg)
             server_message.numIncorrect++;
             printf("Incorrect number 2: %d\n", server_message.numIncorrect);
         }
+        else
+        {
+            printf("server_message.data: ");
+            for (size_t i = 0; i < word_length + server_message.numIncorrect; i++)
+            {
+                printf("%c,", server_message.data[i]);
+            }
+            printf("\n");
+        }
 
         // Check if the game is over
         if (remain_words == 0 || server_message.numIncorrect >= 6)
@@ -159,14 +171,15 @@ void *client_thread(void *arg)
                 strncpy(server_message.data, "You Lose :(", BUFFER_SIZE);
                 server_message.msgFlag = strlen(server_message.data);
             }
-            printf("server msg fla: %d\n", server_message.msgFlag);
-            send(client_socket, &server_message, sizeof(server_message), 0);
+            printf("server msg flag: %d\n", server_message.msgFlag);
+            send_game_control_packet(client_socket, &server_message);
             printf("are you ok?\n");
             memset(&server_message, 0, sizeof(server_message));
             strncpy(server_message.data, "Game Over!", BUFFER_SIZE);
             server_message.msgFlag = strlen(server_message.data);
-            printf("server msg fla: %d\n", server_message.msgFlag);
-            send(client_socket, &server_message, sizeof(server_message), 0);
+            printf("server msg flag: %d\n", server_message.msgFlag);
+
+            send_game_control_packet(client_socket, &server_message);
             printf("I am good\n");
             break;
         }
@@ -175,10 +188,12 @@ void *client_thread(void *arg)
             // Continue the game
             server_message.msgFlag = 0;
             // strncpy(server_message.data, "Incorrect Guesses:", BUFFER_SIZE);
-            send(client_socket, &server_message, sizeof(server_message), 0);
+            send_game_control_packet(client_socket, &server_message);
+            // send(client_socket, &server_message, sizeof(server_message), 0);
         }
     }
 
+    num_clients--;
     // Close the client socket
     close(client_socket);
 
@@ -226,8 +241,6 @@ int main(int argc, char const *argv[])
 
     printf("Hangman Game Server started. Waiting for connections...\n");
 
-    int num_clients = 0;
-
     while (1)
     {
         // Accept a new client connection
@@ -241,6 +254,7 @@ int main(int argc, char const *argv[])
         printf("Client connected. Creating a new game...\n");
 
         // Check if maximum number of clients reached
+        printf("num clients: %d", num_clients);
         if (num_clients >= MAX_CLIENTS)
         {
             struct ServerMessageHeader server_message;
