@@ -31,10 +31,11 @@ void print_game_state(struct ServerMessageHeader *server_header)
             printf(" %c", server_header->data[i]);
         }
         printf("\n>>>\n");
-    }else if (server_header->msgFlag != 0 && server_header->msgFlag != 1)
+    }
+    else if (server_header->msgFlag != 0 && server_header->msgFlag != 1)
     {
         printf(">>> %s\n", server_header->data);
-    } 
+    }
 }
 
 void receive_game_control_packet(int server_socket, struct ServerMessageHeader *server_message)
@@ -144,9 +145,10 @@ void play_game(int server_socket)
         send_client_message(server_socket, &client_message);
 
         // Receive the updated game state from the server
+        memset(&server_message, 0, sizeof(server_message));
         receive_data_packet(server_socket, &server_message);
 
-        printf("%d",server_message.numIncorrect);
+        printf("%d", server_message.numIncorrect);
 
         print_game_state(&server_message);
 
