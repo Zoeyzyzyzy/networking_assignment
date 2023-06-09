@@ -10,7 +10,7 @@
 #include "header.h"
 
 #define MAX_CLIENTS 3
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 54
 
 void error(const char *message)
 {
@@ -79,11 +79,13 @@ void *client_thread(void *arg)
     printf("%s\n", chosen_word);
 
     // Prepare the game control packet
+    memset(&server_message, 0, sizeof(server_message));
     server_message.msgFlag = 1;
     server_message.wordLength = word_length;
     server_message.numIncorrect = 0;
     memset(server_message.data, '_', BUFFER_SIZE);
     server_message.data[word_length] = '\0';
+    int remain_words = word_length;
 
     // Send the game control packet to the client
     send(client_socket, &server_message, sizeof(server_message), 0);
@@ -92,21 +94,28 @@ void *client_thread(void *arg)
     {
         // Receive the client's guess
         int bytes_received = recv(client_socket, &client_message, sizeof(client_message), 0);
-        if (bytes_received == -1)
-        {
-            error("Error: Could not receive data from client");
-        }
-        else if (bytes_received == 0)
+        printf("bytes_recevied: %d\n", bytes_received);
+        // if (bytes_received == -1)
+        // {
+        //     error("Error: Could not receive data from client");
+        // }
+        // else
+        if (bytes_received == -1 || bytes_received == 0)
         {
             // Client terminated connection (Ctrl+D)
-            printf("\n");
+
+            // Close the client socket
             close(client_socket);
-            pthread_exit(NULL);
+
+            // Terminate the thread
+            pthread_exit(client_thread);
+
+            printf("\n\n");
+
             break;
         }
 
         // Update the game state
-        int remain_words = word_length;
         int flag = 0;
         printf("111 %c\n", client_message.data[0]);
         for (int i = 0; i < word_length; i++)
@@ -114,18 +123,24 @@ void *client_thread(void *arg)
             if (tolower(chosen_word[i]) == client_message.data[0])
             {
                 server_message.data[i] = chosen_word[i];
+                remain_words--;
                 flag = 1;
-            }
-            else if (server_message.data[i] == '_')
-            {
-                remain_words++;
             }
         }
         // Update the number of incorrect guesses
-        if (flag == 0)
+        printf("remain words: %d\n", remain_words);
+        if (server_message.msgFlag == 0 && flag == 0)
         {
+            printf("Incorrect number 1: %d\n", server_message.numIncorrect);
+            server_message.data[word_length + server_message.numIncorrect] = client_message.data[0];
+            printf("server_message.data: ");
+            for (size_t i = 0; i < word_length + server_message.numIncorrect; i++)
+            {
+                printf("%c,", server_message.data[i]);
+            }
+            printf("\n");
             server_message.numIncorrect++;
-            server_message.data[word_length] = client_message.data;
+            printf("Incorrect number 2: %d\n", server_message.numIncorrect);
         }
 
         // Check if the game is over
@@ -144,11 +159,15 @@ void *client_thread(void *arg)
                 strncpy(server_message.data, "You Lose :(", BUFFER_SIZE);
                 server_message.msgFlag = strlen(server_message.data);
             }
+            printf("server msg fla: %d\n", server_message.msgFlag);
             send(client_socket, &server_message, sizeof(server_message), 0);
+            printf("are you ok?\n");
             memset(&server_message, 0, sizeof(server_message));
             strncpy(server_message.data, "Game Over!", BUFFER_SIZE);
             server_message.msgFlag = strlen(server_message.data);
+            printf("server msg fla: %d\n", server_message.msgFlag);
             send(client_socket, &server_message, sizeof(server_message), 0);
+            printf("I am good\n");
             break;
         }
         else
@@ -162,9 +181,9 @@ void *client_thread(void *arg)
 
     // Close the client socket
     close(client_socket);
-    pthread_exit(NULL);
 
-    return NULL;
+    // Terminate the thread
+    pthread_exit(client_thread);
 }
 
 int main(int argc, char const *argv[])

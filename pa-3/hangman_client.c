@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include "header.h"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 64
 
 void error(const char *message)
 {
@@ -132,13 +132,13 @@ int main(int argc, char *argv[])
             // Check if game is over
             if (strstr(server_header.data, "Game Over!") != NULL)
             {
+                printf("1234553\n");
                 break;
             }
         }
     }
 
     // Close the socket and terminate the client
-
     close(client_socket);
     return 0;
 }
