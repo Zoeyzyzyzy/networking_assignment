@@ -72,6 +72,7 @@ void receive_data_packet(int server_socket, struct ServerMessageHeader *server_m
 
         bytes_received += received;
     }
+    printf("receive_data_packet:number_Incorrect: %d\n", server_message->numIncorrect);
 }
 
 void send_client_message(int server_socket, struct ClientMessageHeader *client_message)
@@ -146,9 +147,10 @@ void play_game(int server_socket)
 
         // Receive the updated game state from the server
         memset(&server_message, 0, sizeof(server_message));
+
         receive_data_packet(server_socket, &server_message);
 
-        printf("%d", server_message.numIncorrect);
+        // printf("%d", server_message.numIncorrect);
 
         print_game_state(&server_message);
 
