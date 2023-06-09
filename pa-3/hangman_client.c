@@ -53,24 +53,40 @@ void receive_game_control_packet(int server_socket, struct ServerMessageHeader *
 
 void receive_data_packet(int server_socket, struct ServerMessageHeader *server_message)
 {
-    ssize_t bytes_received = recv(server_socket, server_message, sizeof(*server_message), MSG_WAITALL);
-    if (bytes_received == -1)
+    ssize_t bytes_received = 0;
+    size_t total_bytes = sizeof(*server_message);
+
+    while (bytes_received < total_bytes)
     {
-        error("Error: Failed to receive data packet");
-    }
-    else if (bytes_received == 0)
-    {
-        printf("Server closed the connection\n");
-        exit(1);
+        ssize_t received = recv(server_socket, server_message + bytes_received, total_bytes - bytes_received, 0);
+        if (received == -1)
+        {
+            error("Error: Failed to receive data packet");
+        }
+        else if (received == 0)
+        {
+            printf("Server closed the connection\n");
+            exit(1);
+        }
+
+        bytes_received += received;
     }
 }
 
 void send_client_message(int server_socket, struct ClientMessageHeader *client_message)
 {
-    ssize_t bytes_sent = send(server_socket, client_message, sizeof(*client_message), MSG_WAITALL);
-    if (bytes_sent == -1)
+    ssize_t bytes_sent = 0;
+    size_t total_bytes = sizeof(*client_message);
+
+    while (bytes_sent < total_bytes)
     {
-        error("Error: Failed to send client message");
+        ssize_t sent = send(server_socket, client_message + bytes_sent, total_bytes - bytes_sent, 0);
+        if (sent == -1)
+        {
+            error("Error: Failed to send client message");
+        }
+
+        bytes_sent += sent;
     }
 }
 
@@ -129,6 +145,8 @@ void play_game(int server_socket)
 
         // Receive the updated game state from the server
         receive_data_packet(server_socket, &server_message);
+
+        printf("%d",server_message.numIncorrect);
 
         print_game_state(&server_message);
 

@@ -136,13 +136,13 @@ void *client_thread(void *arg)
         {
             printf("Incorrect number 1: %d\n", server_message.numIncorrect);
             server_message.data[word_length + server_message.numIncorrect] = client_message.data[0];
+            server_message.numIncorrect++;
             printf("server_message.data: ");
             for (size_t i = 0; i < word_length + server_message.numIncorrect; i++)
             {
                 printf("%c,", server_message.data[i]);
             }
             printf("\n");
-            server_message.numIncorrect++;
             printf("Incorrect number 2: %d\n", server_message.numIncorrect);
         }
         else
